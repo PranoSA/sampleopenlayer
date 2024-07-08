@@ -1,0 +1,162 @@
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <!-- Include OpenLayers CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" type="text/css">
+    <style>
+        .map {
+            width: 100%;
+            height: 400px; /* Adjust the height as needed */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Home</h1>
+        </div>
+        <div class="content">
+            <!-- Map Container -->
+            <div id="map" class="map"></div>
+        </div>
+
+        <div id="info" style="position: absolute; top: 10px; right: 10px; background: white; padding: 10px; border: 1px solid black; z-index: 1000;">Click on a point</div>
+    </div>
+    <!-- Include OpenLayers JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
+
+    <script>
+
+        let vectorSource = new ol.source.Vector({
+            url: 'http://localhost:3000/api/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ne:Power_Plants&outputFormat=application/json',
+            format: new ol.format.GeoJSON()
+        })
+
+        var clusterSource = new ol.source.Cluster ({
+            distance: 50,
+            source: vectorSource
+        })
+
+        // size Cluster based on Total_MW property
+
+        function clusterStyleFunction(feature) {
+            var features = feature.get('features');
+            console.log(feature.get('features'));
+            var totalMW = features.reduce(function(sum, feature) {
+                return sum + (feature.get('Total_MW') || 0); // Sum up the Total_MW property, defaulting to 0 if undefined
+            }, 0);
+            //Adjust size based on zoom 
+
+            let zoom = map.getView().getZoom();
+            console.log("Zoom: " + zoom)
+            var size = 10;
+            
+            if(zoom > 10){
+                size = Math.min(20, 5+ totalMW / 10); // Limit the size to 40 (or adjust as needed
+            }
+            if (zoom > 5 && zoom < 10){
+                size = Math.min(20,5+ totalMW / 1000); // Limit the size to 40 (or adjust as needed
+            }
+
+            if (zoom < 5){
+                size = Math.min(20, 5+ totalMW / 10000); // Limit the size to 40 (or adjust as needed
+            }
+            
+            console.log("Size: " + size)
+
+           // var size = Math.min(20, 0+ totalMW / 10); // Limit the size to 40 (or adjust as needed
+            var style = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: size,
+                    stroke: new ol.style.Stroke({
+                        color: '#fff'
+                    }),
+                    fill: new ol.style.Fill({
+                        color: '#3399CC'
+                    })
+                }),
+                text: new ol.style.Text({
+                    text: totalMW.toString(),
+                    fill: new ol.style.Fill({
+                        color: '#fff'
+                    })
+                })
+            });
+            return style;
+        }
+
+        var clusterLayer = new ol.layer.Vector({
+            source: clusterSource,
+            style: clusterStyleFunction
+        });
+
+        // Initialize the Map
+        var map = new ol.Map({
+            target: 'map', // The ID of the map container
+            layers: [
+                /*new ol.layer.Tile({
+                    source: new ol.source.OSM() // OpenStreetMap as the source
+                }),*/
+                new ol.layer.Tile({
+                    source : new ol.source.TileWMS({
+                    //url: "https://tigerweb.geo.census.gov/arcgis/services/TIGERweb/tigerWMS_PhysicalFeatures/MapServer/WMSServer",
+                    url : "http://localhost:3000/api/geoserver/ows?",
+                    params: {
+                        LAYERS: "ne:World_Countries_Generalized",
+                        FORMAT: 'image/png',
+                        TRANSPARENT: true,
+                        CRS : 'EPSG:3857'
+                    },
+                    serverType : 'geoserver',
+                    
+                }), 
+            }),
+               /* new ol.layer.Vector({
+                    source: new ol.source.Vector({ 
+                        url: "http://localhost:3000/api/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ne:Power_Plants&outputFormat=application/json",
+                        format: new ol.format.GeoJSON()
+                    })
+                })*/ 
+                clusterLayer
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([0, 0]), // Center of the map
+                zoom: 2, // Initial zoom level
+                projection: 'EPSG:3857'
+            })
+        });
+
+        map.on('singleclick', function(evt) {
+    var infoPanel = document.getElementById('info');
+    var featureFound = false;
+    map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+        // Assuming your features have properties you want to display
+        // Adjust this to match the actual properties of your features
+        var properties = feature.getProperties();
+        console.log(properties);
+        var infoContent = 'Power Plant Name: ' + properties.name; // Example property
+        infoPanel.innerHTML = infoContent;
+        featureFound = true;
+    });
+
+    map.on('moveend', function() {
+    var zoom = map.getView().getZoom();
+    // Adjust clusterSource distance or clusterLayer style based on zoom
+    // For example, disable clustering at high zoom levels  
+    var certainZoomLevel = 10;
+    if (zoom > certainZoomLevel) {
+        clusterSource.setDistance(0); // No clustering
+    } else {
+        clusterSource.setDistance(40); // Adjust distance as needed
+    }
+});
+
+    if (!featureFound) {
+        infoPanel.innerHTML = 'Click on a point';
+    }
+});
+    </script>
+</body>
+</html>
