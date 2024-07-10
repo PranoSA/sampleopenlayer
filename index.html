@@ -4,6 +4,7 @@
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <!-- Include OpenLayers CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" type="text/css">
+    <link rel="stylesheet" type="text/css" href="index.css">
     <style>
         .map {
             width: 100%;
@@ -21,6 +22,11 @@
             <div id="map" class="map"></div>
         </div>
 
+        <div id="popup" class="ol-popup">
+            <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+            <div id="popup-content"></div>
+        </div>
+
         <div id="info" style="position: absolute; top: 10px; right: 10px; background: white; padding: 10px; border: 1px solid black; z-index: 1000;">Click on a point</div>
     </div>
     <!-- Include OpenLayers JavaScript -->
@@ -33,6 +39,27 @@
             url: 'http://localhost:3000/api/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ne:Power_Plants&outputFormat=application/json',
             format: new ol.format.GeoJSON()
         })
+
+        var container = document.getElementById('popup');
+        var content = document.getElementById('popup-content');
+        var closer = document.getElementById('popup-closer');
+
+        // Create an overlay to anchor the popup to the map.
+        var overlay = new ol.Overlay({
+            element: container,
+            autoPan: true,
+            autoPanAnimation: {
+                duration: 250
+            }
+        });
+        
+
+        // Close the popup when the close button is clicked
+    closer.onclick = function() {
+        overlay.setPosition(undefined);
+        closer.blur();
+        return false;
+    };
 
         let tranmissionLineLayer = new ol.layer.Vector({
             // ne:Electric_Power_Transmission_Lines_A
@@ -148,17 +175,32 @@
                 new ol.layer.Tile({
                     source: new ol.source.OSM() // OpenStreetMap as the source
                 }),
+             /*   new ol.layer.Tile({
+    source: new ol.source.TileWMS({
+        url: 'http://localhost:3000/api/ows/geoserver', // GeoServer WMS service URL
+        params: {
+            //Service
+            'SERVICE': 'WMS',
+            'LAYERS': 'tiger:giant_polygon', // Specify the GeoServer layer to display
+            'TILED': true,
+            'VERSION': '1.1.1' // WMS version (optional, depending on your GeoServer setup)
+        },
+        serverType: 'geoserver' // Optional, but can be set for better integration with GeoServer
+    })
+}),*/
                 clusterLayer,
-                heatMapLayer,
-                //tranmissionLineLayer,
+                //heatMapLayer,
+                tranmissionLineLayer,
             ],
             view: new ol.View({
-                center: ol.proj.fromLonLat([0, 0], 'EPSG:3857'), // Center of the map
-                zoom: 2, // Initial zoom level
+                center: ol.proj.fromLonLat([-98.5795, 39.8283], 'EPSG:3857'), // Center of the map
+                zoom: 4, // Initial zoom level
                 projection: 'EPSG:3857'
             }),
 
         });
+
+        map.addOverlay(overlay);
         //map.addLayer(tranmissionLineLayer);
 
         //http://localhost:3000/api/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ne:Electric_Power_Transmission_Lines_A&outputFormat=application/json&
@@ -270,11 +312,49 @@ let previousZoom = 15;
    
 });
 
+var highlightStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+        color: '#ffcc33', // Glowing color
+        width: 4 // Make the line thicker to "glow"
+    })
+});
+
+var selectedFeature = null; 
+
         map.on('singleclick', function(event) {
+
+
+            if(selectedFeature) {
+                selectedFeature.setStyle(null);
+            }
     // Use the map's forEachFeatureAtPixel method to check for features at the click location
     map.forEachFeatureAtPixel(event.pixel, function(feature, layer) {
         // Check if the layer is the transmissionLineLayer
         if (layer === vectorTransmissionLayerOut) {
+
+                        // Construct content for the popup based on the feature's properties
+                        var properties = feature.getProperties();
+            var info = `Name: ${properties.OWNER}<br>
+                        Length: ${Math.round(properties.SHAPE__Len/1000)} km <br> 
+                        Voltage: ${properties.VOLTAGE}<br>
+                        Substation 1: ${properties.SUB_1}<br>
+                        Substation 2: ${properties.SUB_2}`;
+            content.innerHTML = info;
+
+            // Show the popup
+            var coordinate = event.coordinate;
+            overlay.setPosition(coordinate);
+
+            if(selectedFeature) {
+                selectedFeature.setStyle(null);
+            }
+
+            selectedFeature = feature;
+            
+            // Highlight the feature
+            feature.setStyle(highlightStyle);
+            selectedFeature = feature;
+
             // Log the feature to the console
             console.log(feature);
             // Optionally, return the feature if you only want the first feature found
@@ -286,6 +366,59 @@ let previousZoom = 15;
             return candidateLayer === vectorTransmissionLayerOut;
         }
     });
+});
+
+var dragging = false;
+var offsetX, offsetY;
+
+// Assuming 'overlay' is your popup overlay and 'container' is the HTML element of the popup
+var container = document.getElementById('popup'); // Adjust the ID to match your popup's container
+
+container.addEventListener('mousedown', function(event) {
+    // Start dragging
+    if(container.contains(event.target)){
+        dragging = true;
+        var rect = container.getBoundingClientRect();
+        console.log(rect.left)
+        console.log(rect.top)
+        //Get location of the left and top of the container
+        offsetX = event.clientX -parseFloat(rect.left)//- parseFloat(container.style.left);
+        offsetY = event.clientY -parseFloat(rect.top) // parseFloat(container.style.top);
+        container.style.cursor = 'grabbing';
+        console.log("Grabbing")
+        console.log("OffsetX: " + offsetX)
+        console.log("OffsetY: " + offsetY)
+        event.preventDefault();
+    }
+});
+
+document.addEventListener('mousemove', function(event) {
+    if (dragging) {
+        // Calculate the new position
+        var x = event.clientX - offsetX;
+        var y = event.clientY - offsetY;
+
+        console.log("Dragging")
+        console.log("X: " + x)
+        console.log("Y: " + y)
+
+        
+
+        // Update the position of the popup
+        container.style.left = x-650 + 'px';
+        container.style.top = y-40 + 'px';
+    }
+});
+
+document.addEventListener('mouseup', function() {
+    // Stop dragging
+    dragging = false;
+    container.style.cursor = 'grab';
+});
+
+// Prevent text selection while dragging
+container.addEventListener('selectstart', function(event) {
+    event.preventDefault();
 });
         
 
