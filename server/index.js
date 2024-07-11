@@ -10,7 +10,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, './index.html'));
+    res.sendFile(path.join(process.cwd(), './index.html'));
 });
 
 // Proxy middleware options
@@ -31,10 +31,10 @@ app.use('/api', createProxyMiddleware(proxyOptions));
 
 app.get('*', (req, res) => {
     // Construct the absolute path to the requested file
-    const filePath = path.join(__dirname, req.path);
+    const filePath = path.join(process.cwd(), req.path);
 
     // Send the file, but first check if the path is safe
-    if (filePath.indexOf(__dirname) !== 0) {
+    if (filePath.indexOf(process.cwd()) !== 0) {
         // If the requested file is not within the directory, deny access
         return res.status(403).send('Access Denied');
     } else {
