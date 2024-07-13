@@ -12,11 +12,13 @@ import WMTSTileGrid from 'ol/tilegrid/WMTS';
 import { get as getProjection } from 'ol/proj';
 import { getTopLeft, getWidth } from 'ol/extent';
 
+const tileSize = 256;
+
 var container = document.getElementById('popup'); // Adjust the ID to match your popup's container
 
 const projection = getProjection('EPSG:3857');
 const projectionExtent = projection.getExtent();
-const size = getWidth(projectionExtent) / 256;
+const size = getWidth(projectionExtent) / tileSize;
 const resolutions = new Array(14);
 const matrixIds = new Array(14);
 for (var z = 0; z < 14; ++z) {
@@ -45,7 +47,7 @@ const wmtsLayer = new TileLayer({
     format: 'image/png',
     matrixSet: 'EPSG:900913',
     projection: 'EPSG:900913',
-    tileSize: 256,
+    tileSize,
     style: 'default',
     tileGrid: new WMTSTileGrid({
       origin: getTopLeft(projectionExtent),
@@ -78,10 +80,10 @@ var map = new Map({
         url: 'http://localhost:3000/api/geoserver/gwc/service/tms/1.0.0/ne:States_shapefile@EPSG%3A900913@png/{z}/{x}/{-y}.png',
       }),
     }),*/
-
+    wmtsLayer,
     //powerPlantClusterLayer,
     powerPlantHeatMapLayer,
-    wmtsLayer,
+
     //clusterLayer,
     //heatMapLayer,
     //tranmissionLineLayer,
