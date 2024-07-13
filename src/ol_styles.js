@@ -1,29 +1,32 @@
-var defaultStyle = new ol.style.Style({
-  stroke: new ol.style.Stroke({
+import * as ol from 'ol';
+import { map } from './dom_mapper';
+import { Style, Stroke, Circle, Fill, Text } from 'ol/style';
+
+var defaultTransmissionLineStyle = new Style({
+  stroke: new Stroke({
     color: '#ff00ff',
     width: 4, // Default line width
   }),
 });
 
-const hoverStyle = new ol.style.Style({
-  stroke: new ol.style.Stroke({
+const hoverTransmissionLineStyle = new Style({
+  stroke: new Stroke({
     color: '#00ffff',
     width: 4, // Highlighted line width
   }),
 });
 
-var highlightStyle = new ol.style.Style({
-  stroke: new ol.style.Stroke({
+var highlightTransmissionLineStyle = new Style({
+  stroke: new Stroke({
     color: '#ff0000',
     width: 5, // Highlighted line width
   }),
 });
 
-//Cluster Style
-var clusterStyle = new ol.style.Style({
-  image: new ol.style.Circle({
+var clusterPowerPlantStyle = new Style({
+  image: new Circle({
     radius: 10,
-    fill: new ol.style.Fill({
+    fill: new Fill({
       color: '#ff00ff',
     }),
   }),
@@ -40,7 +43,7 @@ function clusterStyleFunction(feature) {
   //Adjust size based on zoom
 
   let zoom = map.getView().getZoom();
-  console.log('Zoom: ' + zoom);
+
   var size = 10;
 
   if (zoom > 10) {
@@ -54,27 +57,25 @@ function clusterStyleFunction(feature) {
     size = Math.min(20, 5 + totalMW / 10000); // Limit the size to 40 (or adjust as needed
   }
 
-  console.log('Size: ' + size);
-
   // var size = Math.min(20, 0+ totalMW / 10); // Limit the size to 40 (or adjust as needed
-  var style = new ol.style.Style({
-    image: new ol.style.Circle({
+  var style = new Style({
+    image: new Circle({
       radius: size,
-      stroke: new ol.style.Stroke({
+      stroke: new Stroke({
         color: '#fff',
       }),
-      fill: new ol.style.Fill({
+      fill: new Fill({
         color: '#3399CC',
       }),
     }),
-    text: new ol.style.Text({
+    text: new Text({
       text:
         totalMW > 1000000
           ? Math.round(totalMW / 1000000).toString() + 'TW'
           : totalMW > 1000
           ? Math.round(totalMW / 1000).toString() + 'GW'
           : Math.round(totalMW).toString() + 'MW',
-      fill: new ol.style.Fill({
+      fill: new Fill({
         color: '#000',
       }),
     }),
@@ -83,9 +84,9 @@ function clusterStyleFunction(feature) {
 }
 
 export {
-  defaultStyle,
-  hoverStyle,
-  highlightStyle,
-  clusterStyle,
+  defaultTransmissionLineStyle,
+  hoverTransmissionLineStyle,
+  highlightTransmissionLineStyle,
+  clusterPowerPlantStyle,
   clusterStyleFunction,
 };

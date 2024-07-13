@@ -1,48 +1,21 @@
-import { defaultStyle, hoverStyle, highlightStyle } from './ol_styles';
-import { handleSelectionPopup, handleZoomChanges } from './transmissions';
-import { clusterStyleFunction } from './power_plants';
-import map from './map';
-import { overlay } from './map';
-
-let previousZoom = 15;
+import * as ol from 'ol';
+import {
+  defaultTransmissionLineStyle,
+  highlightTransmissionLineStyle,
+  hoverTransmissionLineStyle,
+} from './ol_styles';
+import {
+  handleSelectionPopup,
+  handleZoomChanges,
+  updateMapLayers,
+  hoverTranssmionHandler,
+} from './transmissions';
+import { clusterStyleFunction } from './ol_styles';
+import { overlay, map } from './dom_mapper';
+import { powerPlantClusterLayer } from './power_plants';
+import './index.css';
 
 map.getView().on('change:resolution', handleZoomChanges);
-
-let last_voltage = 0;
-let last_distance = 0;
-
-document.getElementById('min-voltage').addEventListener('input', function () {
-  let voltageValue = this.value;
-  document.getElementById('voltage-value').textContent = voltageValue;
-
-  let record_voltage = 0;
-  let record_distance = 0;
-  // set a timeout to prevent too many requests
-  setTimeout(() => {
-    if (
-      record_voltage == voltageValue &&
-      record_distance == document.getElementById('min-distance').value
-    ) {
-      return;
-    }
-    record_voltage = voltageValue;
-    record_distance = document.getElementById('min-distance').value;
-    //updateMapLayers(voltageValue, document.getElementById('min-distance').value);
-  }, 2000);
-  //wait 2 seconds
-
-  //updateMapLayers(voltageValue, document.getElementById('min-distance').value);
-});
-
-document.getElementById('min-distance').addEventListener('input', function () {
-  let distanceValue = this.value;
-
-  document.getElementById('distance-value').textContent = distanceValue;
-
-  //update map layers
-  //updateMapLayers(document.getElementById('min-voltage').value, distanceValue);
-  // Assuming distance affects another layer or filter, implement accordingly
-});
 
 document
   .getElementById('update-map-btn')
@@ -51,85 +24,13 @@ document
 
     const minVoltage = document.getElementById('min-voltage').value;
     const minDistance = document.getElementById('min-distance').value;
-    console.log('Updating Map');
+
+    // Change text display to show the current filters for element voltage-value
+    document.getElementById('voltage-value').innerHTML = minVoltage + 'kV';
+    document.getElementById('distance-value').innerHTML = minDistance + 'km';
     updateMapLayers(minVoltage, minDistance);
   });
 
-function updateMapLayers(voltage, distance) {
-  // Update the source URL or parameters based on voltage and possibly distance
-  // This example only shows voltage being used
-
-  // initial filter
-
-  //check if either distance or voltage has changed
-  if (last_distance == distance && last_voltage == voltage) {
-    return;
-  }
-
-  //add distance filter
-  let filter = `VOLTAGE>${voltage} AND SHAPE__Len>${distance}`;
-
-  var extent = map.getView().calculateExtent(map.getSize());
-  var projection = map.getView().getProjection();
-  var wfsProjection = 'EPSG:3857'; // The projection used by your WFS service
-  var transformedExtent = ol.proj.transformExtent(
-    extent,
-    projection,
-    wfsProjection
-  );
-
-  // Construct the BBOX filter string
-  var bboxFilter = `BBOX(the_geom,${transformedExtent.join(',')})`;
-
-  // Combine your existing filter with the BBOX filter
-  var combinedFilter = `${filter} AND ${bboxFilter}`;
-
-  var wfsUrl = `http://localhost:3000/api/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ne:Electric_Power_Transmission_Lines_A&outputFormat=application/json&CQL_FILTER=${encodeURIComponent(
-    combinedFilter
-  )}`;
-
-  console.log('wfsUrl' + ' ' + wfsUrl);
-  //let newUrl = `http://localhost:3000/api/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=ne:Electric_Power_Transmission_Lines_A&outputFormat=application/json&CQL_FILTER=VOLTAGE>${voltage}`;
-  //tranmissionLineLayer.getSource().setUrl(wfsUrl);
-  //actually reset layer
-
-  //fetchFeatures(wfsUrl);
-
-  //copy feature so it still exists
-
-  //remove previous layer
-  map.removeLayer(vectorTransmissionLayerOut);
-
-  //add new layer
-  var vectorTransmissionLayer = new ol.layer.Vector({
-    source: new ol.source.Vector({
-      format: new ol.format.GeoJSON(),
-      url: wfsUrl,
-    }),
-  });
-
-  // Update the layer
-  vectorTransmissionLayerOut = vectorTransmissionLayer;
-
-  // Add styling to layer
-  vectorTransmissionLayer.setStyle(defaultStyle);
-
-  map.addLayer(vectorTransmissionLayer);
-
-  vectorTransmissionLayer.getSource().addFeature(selectedFeature);
-
-  // add styling to selected feature
-  selectedFeature.setStyle(highlightStyle);
-
-  // For distance, you would need to adjust accordingly, possibly affecting another layer or filter
-}
-
-var highlightStyle = new ol.style.Style({
-  stroke: new ol.style.Stroke({
-    color: '#ff0000',
-    width: 5, // Highlighted line width
-  }),
-});
 var selectedFeature = null;
 
 map.on('singleclick', handleSelectionPopup);
@@ -192,13 +93,14 @@ map.on('singleclick', function (evt) {
 
   map.on('moveend', function () {
     var zoom = map.getView().getZoom();
+
     // Adjust clusterSource distance or clusterLayer style based on zoom
     // For example, disable clustering at high zoom levels
     var certainZoomLevel = 10;
     if (zoom > certainZoomLevel) {
-      clusterSource.setDistance(0); // No clustering
+      powerPlantClusterLayer.setDistance(0); // No clustering
     } else {
-      clusterSource.setDistance(40); // Adjust distance as needed
+      powerPlantClusterLayer.setDistance(40); // Adjust distance as needed
     }
   });
 
@@ -217,32 +119,4 @@ map.on('pointermove', function (evt) {
 });
 let currentHoveredFeature = null;
 
-map.on('pointermove', function (evt) {
-  if (evt.dragging) {
-    return;
-  }
-  const pixel = map.getEventPixel(evt.originalEvent);
-  const feature = map.forEachFeatureAtPixel(pixel, function (feature) {
-    return feature;
-  });
-
-  // Reset style of previously hovered feature and not the same as highlighted feature
-  if (
-    currentHoveredFeature &&
-    feature !== currentHoveredFeature &&
-    currentHoveredFeature !== selectedFeature
-  ) {
-    // Assuming you have a defaultStyle or you can simply set to null to use the layer's default
-    currentHoveredFeature.setStyle(null);
-    currentHoveredFeature = null;
-  }
-
-  // Apply hover style to the new hovered feature
-  if (feature && !currentHoveredFeature) {
-    feature.setStyle(hoverStyle);
-    currentHoveredFeature = feature;
-    map.getTargetElement().style.cursor = 'pointer';
-  } else {
-    map.getTargetElement().style.cursor = '';
-  }
-});
+map.on('pointermove', hoverTranssmionHandler);
