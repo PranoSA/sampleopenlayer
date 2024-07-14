@@ -1,0 +1,3 @@
+https://services2.arcgis.com/FiaPA4ga0iQKduv3/arcgis/rest/services/US_Electric_Power_Transmission_Lines/FeatureServer/replicafilescache/US_Electric_Power_Transmission_Lines_-5565712113468837121.zip
+https://opendata.arcgis.com/api/v3/datasets/1b02c87f62d24508970dc1a6df80c98e_0/downloads/data?format=shp&spatialRefId=4326&where=1%3D1
+https://opendata.arcgis.com/api/v3/datasets/bf5c5110b1b944d299bb683cdbd02d2a_0/downloads/data?format=shp&spatialRefId=4326&where=1%3D1

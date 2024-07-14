@@ -1,0 +1,31 @@
+#!/bin/bash
+# Variables
+SOURCE_URL="http://localhost:8080/geoserver"
+AUTH="admin:geoserver"
+WORKSPACE="ne"
+DATASTORE_NAME="Transmission_Lines"
+
+# Export Data Store configuration to an XML file
+curl -u $AUTH -X GET "$SOURCE_URL/rest/workspaces/$WORKSPACE/datastores/$DATASTORE_NAME.xml" -o "$DATASTORE_NAME.xml"
+
+#!/bin/bash
+# Variables
+TARGET_URL="http://localhost:8080/geoserver"
+
+# Ensure the shapefile is in the correct location on the target GeoServer's data directory
+
+# Import Data Store configuration from the XML file
+curl -u $AUTH -X POST -H "Content-Type: application/xml" -d @$DATASTORE_NAME.xml "$TARGET_URL/rest/workspaces/$WORKSPACE/datastores"
+
+
+
+
+# exporting Layer Data 
+
+curl -u $AUTH -X GET "$TARGET_URL/rest/workspaces/$WORKSPACE/datastores/$DATA
+STORE_NAME/featuretypes/Electric_Power_Transmission_Lines_A.xml" > Electric_Power_Transmission_Lines_A.xml
+
+
+
+# importing layer data 
+ curl -u $AUTH -X POST -H "Content-Type: application/xml" -d @Electric_Power_Transmission_Lines_A.xml "$TARGET_URL/rest/workspaces/$WORKSPACE/datastores/$DATASTORE_NAME/featuretypes" -v

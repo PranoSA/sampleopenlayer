@@ -90,7 +90,7 @@ var map = new Map({
   ],
   //ol.proj.fromLonLat([-98.5795, 39.8283], 'EPSG:3857'),
   view: new ol.View({
-    center: fromLonLat([-98.5795, 39.8283]), // Starting position [lon, lat]
+    center: fromLonLat([-98.5795, 36.5]), // Starting position [lon, lat]
     zoom: 4, // Initial zoom level
     projection: 'EPSG:3857',
   }),

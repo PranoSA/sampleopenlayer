@@ -1,0 +1,29 @@
+<dataStore>
+  <name>United_States_Map</name>
+  <type>Shapefile</type>
+  <enabled>true</enabled>
+  <workspace>
+    <name>ne</name>
+    <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="alternate" href="http://localhost:8080/geoserver/rest/workspaces/ne.xml" type="application/xml"/>
+  </workspace>
+  <connectionParameters>
+    <entry key="charset">ISO-8859-1</entry>
+    <entry key="filetype">shapefile</entry>
+    <entry key="create spatial index">true</entry>
+    <entry key="memory mapped buffer">false</entry>
+    <entry key="timezone">America/Los_Angeles</entry>
+    <entry key="enable spatial index">true</entry>
+    <entry key="namespace">https://www.naturalearthdata.com</entry>
+    <entry key="cache and reuse memory maps">true</entry>
+    <entry key="skipScan">true</entry>
+    <entry key="url">file:States_shapefile.shp</entry>
+    <entry key="fstype">shape</entry>
+  </connectionParameters>
+  <__default>false</__default>
+  <dateCreated>2024-07-13 07:03:49.232 UTC</dateCreated>
+  <dateModified>2024-07-14 06:17:07.49 UTC</dateModified>
+  <disableOnConnFailure>false</disableOnConnFailure>
+  <featureTypes>
+    <atom:link xmlns:atom="http://www.w3.org/2005/Atom" rel="alternate" href="http://localhost:8080/geoserver/rest/workspaces/ne/datastores/United_States_Map/featuretypes.xml" type="application/xml"/>
+  </featureTypes>
+</dataStore>
