@@ -19,17 +19,14 @@
   </head>
   <body>
     <div class="container">
-      <div class="header">
-        <h1>Home</h1>
-      </div>
-      <div class="content">
-        <!-- Map Container -->
-        <div id="map" class="map"></div>
-      </div>
-
       <div id="popup" class="ol-popup">
         <a href="#" id="popup-closer" class="ol-popup-closer"></a>
         <div id="popup-content"></div>
+      </div>
+
+      <div class="content">
+        <!-- Map Container -->
+        <div id="map" class="map"></div>
       </div>
 
       <div id="map-controls">
@@ -42,7 +39,7 @@
           value="700"
           class="slider"
         />
-        <span id="voltage-value">0</span> kV
+        <div id="voltage-value">700 kV</div>
 
         <label for="min-distance">Min Distance (km):</label>
         <input
@@ -53,25 +50,32 @@
           value="0"
           class="slider"
         />
-        <span id="distance-value">0</span> km
+        <div id="distance-value">0 km</div>
 
         <button id="update-map-btn">Update Map</button>
-      </div>
 
-      <div
-        id="info"
-        style="
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          background: white;
-          padding: 10px;
-          border: 1px solid black;
-          z-index: 1000;
-        "
-      >
-        Click on a point
+        <div id="tranmission-line-info">
+          <h4 id="number-transmission-line"># of Transmission Lines: 0</h4>
+          <h4 id="vertex-transmission-line"># of Vertices: 0</h4>
+          <h4 id="distance-transmission-line" Total Length: 0 km</h4>
+          <h4 id="size-transmission-line">Total Data Size Loaded : 0kb</h4>
+        </div>
       </div>
+    </div>
+
+    <div
+      id="info"
+      style="
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        border: 1px solid black;
+        z-index: 1000;
+      "
+    >
+      Click on a point
     </div>
     <!-- Include OpenLayers JavaScript -->
     <!-- <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script> -->

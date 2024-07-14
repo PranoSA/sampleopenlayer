@@ -1,3 +1,5 @@
+#Install geoserver-1.25.2 into this directory 
+
 docker build --build-arg CACHEBUSTER=$(date%s) -f Dockerfile -t phil_geoserver .
 docker build -f Dockerfile.express -t phil_express_server .
 

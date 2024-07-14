@@ -12,6 +12,6 @@ COPY webpack.config.js /
 RUN npx webpack --config webpack.config.js 
 
 COPY server/ /server
-COPY dist/ /dist
+#COPY dist/ /dist
 
 CMD ["node", "server/index.js"]

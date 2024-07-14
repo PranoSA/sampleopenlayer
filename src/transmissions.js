@@ -30,6 +30,8 @@ if (map == null) {
 
 map.addLayer(tranmissionLineLayer);
 
+AddListener(tranmissionLineLayer);
+
 tranmissionLineLayer.setStyle(defaultTransmissionLineStyle);
 
 let selectedFeature = null;
@@ -177,6 +179,7 @@ function handleZoomChanges() {
   }
 
   map.addLayer(vectorTransmissionLayer);
+  AddListener(vectorTransmissionLayer);
 
   //restore selected feature vector
 
@@ -248,6 +251,8 @@ function updateMapLayers(voltage, distance) {
 
   map.addLayer(vectorTransmissionLayer);
 
+  AddListener(vectorTransmissionLayer);
+
   if (!selectedFeature) return;
 
   vectorTransmissionLayer.getSource().addFeature(selectedFeature);
@@ -294,3 +299,56 @@ export {
   updateMapLayers,
   hoverTranssmionHandler,
 };
+
+function AddListener(newTransmissionLayer) {
+  const source = newTransmissionLayer.getSource();
+  source.on('change', function (e) {
+    if (source.getState() === 'ready') {
+      var features = source.getFeatures();
+
+      var distance_html = document.getElementById('distance-transmission-line');
+      var number_html = document.getElementById('number-transmission-line');
+      var size_html = document.getElementById('size-transmission-line');
+      var vertex_html = document.getElementById('vertex-transmission-line');
+
+      // Get the total size of the features
+      var features = this.getFeatures();
+      var geojsonFormat = new GeoJSON();
+      var geojsonStr = geojsonFormat.writeFeatures(features);
+      var sizeInBytes = new TextEncoder().encode(geojsonStr).length;
+      var sizeInKb = sizeInBytes / 1024;
+      //console.log(`Total data size: ${sizeInKb.toFixed(2)} kB`);
+
+      //Total Data Size Loaded : 0kb
+      size_html.innerHTML = `Total Data Size Loaded : ${sizeInKb.toFixed(
+        0
+      )} kB`;
+
+      var features = this.getFeatures();
+      var totalVertices = features.reduce((acc, feature) => {
+        var geometry = feature.getGeometry();
+        var vertices = geometry.getCoordinates();
+        // For simple geometries, vertices is an array of coordinates
+        // For complex geometries (e.g., polygons), it's an array of arrays, etc.
+        // Adjust the logic here based on your specific geometry types
+        return acc + vertices[0].length; // Adjust this logic for complex geometries
+      }, 0);
+      //<h4 id="vertex-transmission-line"># of Vertices: 0</h4>
+      vertex_html.innerHTML = `# of Vertices: ${totalVertices}`;
+
+      var totalNumberLines = features.length;
+      number_html.innerHTML = `# of Transmission Lines: ${totalNumberLines}`;
+      //console.log(`Total number of vertices: ${totalVertices}`);
+      //
+
+      //get total length of the transmission lines from properties.SHAPE__Len
+      var totalLength = features.reduce((acc, feature) => {
+        var properties = feature.getProperties();
+        return acc + properties.SHAPE__Len / 1000;
+      }, 0);
+      //console.log(`Total length of transmission lines: ${totalLength}`);
+      //<h4 id="distance-transmission-line" Total Length: 0 km</h4>
+      distance_html.innerHTML = `Total Length: ${Math.round(totalLength)} km`;
+    }
+  });
+}

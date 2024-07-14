@@ -14,8 +14,86 @@ import { clusterStyleFunction } from './ol_styles';
 import { overlay, map } from './dom_mapper';
 import { powerPlantClusterLayer } from './power_plants';
 import './index.css';
+import {
+  startDraggingPopup,
+  handleDraggingPopup,
+  stopDraggingPopup,
+} from './popup';
 
 map.getView().on('change:resolution', handleZoomChanges);
+
+//add event listener to the scroller to the text in scroller
+
+/*
+
+      <div id="map-controls">
+        <label for="min-voltage">Min Voltage (kV):</label>
+        <input
+          type="range"
+          id="min-voltage"
+          min="0"
+          max="1000"
+          value="700"
+          class="slider"
+        />
+        <span id="voltage-value">0</span> kV
+
+        <label for="min-distance">Min Distance (km):</label>
+        <input
+          type="range"
+          id="min-distance"
+          min="0"
+          max="1000"
+          value="0"
+          class="slider"
+        />
+        <span id="distance-value">0</span> km
+
+        <button id="update-map-btn">Update Map</button>
+      </div>
+*/
+
+// Add event listener to  changes in min-voltage and min-distance
+// Update the map layers based on the new values
+
+//do the same thing on page load?
+let hasChanged = false;
+
+const setButtonState = function (changed = false) {
+  const button = document.getElementById('update-map-btn');
+  if (changed) {
+    button.classList.remove('disabled');
+  } else {
+    button.classList.add('disabled');
+  }
+};
+
+// on load
+document.addEventListener('DOMContentLoaded', function () {
+  const minVoltage = document.getElementById('min-voltage').value;
+  const minDistance = document.getElementById('min-distance').value;
+
+  document.getElementById('voltage-value').innerHTML = minVoltage + 'kV';
+  document.getElementById('distance-value').innerHTML = minDistance + 'km';
+  updateMapLayers(minVoltage, minDistance);
+  setButtonState(false);
+});
+
+document
+  .getElementById('min-voltage')
+  .addEventListener('input', function (event) {
+    const minVoltage = event.target.value;
+    document.getElementById('voltage-value').innerHTML = minVoltage + 'kV';
+    setButtonState(true);
+  });
+
+document
+  .getElementById('min-distance')
+  .addEventListener('input', function (event) {
+    const minDistance = event.target.value;
+    document.getElementById('distance-value').innerHTML = minDistance + 'km';
+    setButtonState(true);
+  });
 
 document
   .getElementById('update-map-btn')
@@ -25,10 +103,8 @@ document
     const minVoltage = document.getElementById('min-voltage').value;
     const minDistance = document.getElementById('min-distance').value;
 
-    // Change text display to show the current filters for element voltage-value
-    document.getElementById('voltage-value').innerHTML = minVoltage + 'kV';
-    document.getElementById('distance-value').innerHTML = minDistance + 'km';
     updateMapLayers(minVoltage, minDistance);
+    setButtonState(false);
   });
 
 var selectedFeature = null;
@@ -41,37 +117,11 @@ var offsetX, offsetY;
 // Assuming 'overlay' is your popup overlay and 'container' is the HTML element of the popup
 var container = document.getElementById('popup'); // Adjust the ID to match your popup's container
 
-container.addEventListener('mousedown', function (event) {
-  // Start dragging
-  if (container.contains(event.target)) {
-    dragging = true;
-    var rect = container.getBoundingClientRect();
-    //Get location of the left and top of the container
-    offsetX = event.clientX - parseFloat(rect.left); //- parseFloat(container.style.left);
-    offsetY = event.clientY - parseFloat(rect.top); // parseFloat(container.style.top);
-    container.style.cursor = 'grabbing';
+container.addEventListener('mousedown', startDraggingPopup);
 
-    event.preventDefault();
-  }
-});
+document.addEventListener('mousemove', handleDraggingPopup);
 
-document.addEventListener('mousemove', function (event) {
-  if (dragging) {
-    // Calculate the new position
-    var x = event.clientX - offsetX;
-    var y = event.clientY - offsetY;
-
-    // Update the position of the popup
-    container.style.left = x - 650 + 'px';
-    container.style.top = y - 40 + 'px';
-  }
-});
-
-document.addEventListener('mouseup', function () {
-  // Stop dragging
-  dragging = false;
-  container.style.cursor = 'grab';
-});
+document.addEventListener('mouseup', stopDraggingPopup);
 
 // Prevent text selection while dragging
 container.addEventListener('selectstart', function (event) {
@@ -91,8 +141,26 @@ map.on('singleclick', function (evt) {
     featureFound = true;
   });
 
+  //When is the moveend event triggered?
+  // When the map is done moving
+  // zooming in and out
+  var previousZoom = 0;
+  var previousCenter;
+
   map.on('moveend', function () {
     var zoom = map.getView().getZoom();
+
+    //compare the previous center to the new center
+    if (previousCenter !== map.getView().getCenter()) {
+      setButtonState(true);
+      previousCenter = map.getView().getCenter();
+    }
+
+    //enable button if the zoom changes, or if the map bounds change
+    if (previousZoom !== zoom) {
+      setButtonState(true);
+      previousZoom = zoom;
+    }
 
     // Adjust clusterSource distance or clusterLayer style based on zoom
     // For example, disable clustering at high zoom levels
