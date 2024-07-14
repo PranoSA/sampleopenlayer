@@ -6,13 +6,20 @@ import {
   highlightTransmissionLineStyle,
   clusterPowerPlantStyle,
   clusterStyleFunction,
+  RectangleStyle,
 } from './ol_styles';
-import { transformExtent } from 'ol/proj';
+import { toLonLat, transformExtent } from 'ol/proj';
+import { Feature } from 'ol';
+import { Vector } from 'ol/source';
 
 import { map, overlay } from './dom_mapper';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
+import { Polygon } from 'ol/geom';
+import { fromExtent as PolygonFromExtent } from 'ol/geom/Polygon';
+import { getDistance } from 'ol/sphere';
+import { containsCoordinate } from 'ol/extent';
 
 //Ignore Zoom Requests Once User Changes Default Filters
 let filtered = false;
@@ -29,6 +36,7 @@ if (map == null) {
 }
 
 map.addLayer(tranmissionLineLayer);
+//DrawRectangle(map.getView().calculateExtent(map.getSize()));
 
 AddListener(tranmissionLineLayer);
 
@@ -123,6 +131,8 @@ function handleZoomChanges() {
     return;
   }
 
+  //enable button
+
   previousZoom = zoom;
 
   var extent = map.getView().calculateExtent(map.getSize());
@@ -178,6 +188,7 @@ function handleZoomChanges() {
     selectedFeature.setStyle(highlightTransmissionLineStyle);
   }
 
+  DrawRectangle(extent);
   map.addLayer(vectorTransmissionLayer);
   AddListener(vectorTransmissionLayer);
 
@@ -200,6 +211,33 @@ function handleZoomChanges() {
   if (selectedFeature) {
     selectedFeature.setStyle(highlightTransmissionLineStyle);
   }
+}
+
+var previousRectangle = null;
+
+function DrawRectangle(extent) {
+  var rectangle = PolygonFromExtent(extent);
+
+  if (previousRectangle) {
+    map.removeLayer(previousRectangle);
+  }
+
+  var feature = new Feature(rectangle);
+  var vectorSource = new Vector({
+    features: [feature], // Add our feature
+  });
+
+  var vectorLayer = new VectorLayer({
+    source: vectorSource,
+    // Optional: Style the rectangle
+    style: RectangleStyle,
+  });
+
+  previousRectangle = vectorLayer;
+
+  // Step 4: Add the Layer to the Map
+  map.addLayer(vectorLayer);
+  return;
 }
 
 function updateMapLayers(voltage, distance) {
@@ -249,6 +287,7 @@ function updateMapLayers(voltage, distance) {
   // Add styling to layer
   vectorTransmissionLayer.setStyle(defaultTransmissionLineStyle);
 
+  DrawRectangle(extent);
   map.addLayer(vectorTransmissionLayer);
 
   AddListener(vectorTransmissionLayer);
@@ -320,9 +359,15 @@ function AddListener(newTransmissionLayer) {
       //console.log(`Total data size: ${sizeInKb.toFixed(2)} kB`);
 
       //Total Data Size Loaded : 0kb
-      size_html.innerHTML = `Total Data Size Loaded : ${sizeInKb.toFixed(
-        0
-      )} kB`;
+      if (sizeInKb > 1024) {
+        size_html.innerHTML = `Total Data Size Loaded : ${(
+          sizeInKb / 1024
+        ).toFixed(3)} MB`;
+      } else {
+        size_html.innerHTML = `Total Data Size Loaded : ${sizeInKb.toFixed(
+          0
+        )} kB`;
+      }
 
       var features = this.getFeatures();
       var totalVertices = features.reduce((acc, feature) => {
@@ -348,6 +393,54 @@ function AddListener(newTransmissionLayer) {
       }, 0);
       //console.log(`Total length of transmission lines: ${totalLength}`);
       //<h4 id="distance-transmission-line" Total Length: 0 km</h4>
+      distance_html.innerHTML = `Total Lengther: ${Math.round(totalLength)} km`;
+
+      // get extent of the view
+      var extent_view = map.getView().calculateExtent(map.getSize());
+
+      let extent_4326 = transformExtent(extent_view, 'EPSG:3857', 'EPSG:4326');
+
+      // calculate distance based on vertices inside of the extent
+      var distance = features.reduce((acc, feature) => {
+        var geometry = feature.getGeometry();
+        var vertices = geometry.getCoordinates()[0];
+
+        //check if entire feature is inside of the extent
+
+        //if the entire line is inside the extent (no vertices outside of the extent)
+        // you can use .Shape__Len like earlier
+        // if you want to calculate the distance along the line
+
+        //calculate distance along line
+        var distance_feature = vertices.reduce((acc, vertex, index) => {
+          // check if vertex is outside extent, return +0 if it is, just ac
+          if (index === 0) {
+            return acc;
+          }
+
+          //convert to espg:4326
+          let vertex_4326 = toLonLat(vertex);
+
+          let prev_vertex_4326 = toLonLat(vertices[index - 1]);
+
+          //convert extent to 4326
+
+          if (!containsCoordinate(extent_4326, vertex_4326)) {
+            return acc;
+          }
+
+          const add_distance = getDistance(vertex_4326, prev_vertex_4326);
+          //return acc + getDistance(vertex, vertices[index - 1]);
+          return acc + add_distance / 1000;
+        }, 0);
+
+        // For simple geometries, vertices is an array of coordinates
+        // For complex geometries (e.g., polygons), it's an array of arrays, etc.
+        // Adjust the logic here based on your specific geometry types
+        return acc + distance_feature; // Adjust this logic for complex geometries
+      }, 0);
+      totalLength = distance;
+
       distance_html.innerHTML = `Total Length: ${Math.round(totalLength)} km`;
     }
   });

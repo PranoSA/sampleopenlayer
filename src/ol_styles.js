@@ -32,6 +32,16 @@ var clusterPowerPlantStyle = new Style({
   }),
 });
 
+var RectangleStyle = new Style({
+  stroke: new Stroke({
+    color: '#ffcc33',
+    width: 2,
+  }),
+  fill: new Fill({
+    color: 'rgba(255, 204, 51, 0.2)',
+  }),
+});
+
 // size Cluster based on Total_MW property
 
 function clusterStyleFunction(feature) {
@@ -89,4 +99,5 @@ export {
   highlightTransmissionLineStyle,
   clusterPowerPlantStyle,
   clusterStyleFunction,
+  RectangleStyle,
 };

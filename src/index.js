@@ -21,6 +21,10 @@ import {
 } from './popup';
 
 map.getView().on('change:resolution', handleZoomChanges);
+map.getView().on('change:center', function () {
+  //enable button
+  setButtonState(true);
+});
 
 //add event listener to the scroller to the text in scroller
 
