@@ -1,0 +1,5 @@
+docker build --build-arg CACHEBUSTER=$(date%s) -f Dockerfile -t phil_geoserver .
+docker build -f Dockerfile.express -t phil_express_server .
+
+docker run -it -p 8080:8080 phil_geoserver
+docker run -it --network=host phil_express_server
