@@ -1,5 +1,9 @@
 import * as ol from 'ol';
-import { powerPlantClusterLayer, powerPlantHeatMapLayer } from './power_plants';
+import {
+  powerPlantClusterLayer,
+  powerPlantHeatMapLayer,
+  setTotalWeightPowerPlant,
+} from './power_plants';
 import { transformExtent } from 'ol/proj';
 import { Map } from 'ol';
 import { fromLonLat } from 'ol/proj';
