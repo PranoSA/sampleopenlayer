@@ -1,0 +1,16 @@
+# based on JAva 17
+#RUN rm /usr/share/geoserver/webapps/geoserver/WEB-INF/lib/marlin-0.9.3.jar#
+#docker push pcadler/geoserver-build:tagname
+FROM openjdk:17-jdk-alpine3.14
+COPY geoserver-2.25.2-bin.zip /
+# Remove the default marlin jar
+RUN apk add --no-cache unzip
+RUN unzip geoserver-2.25.2-bin.zip -d /usr/share/geoserver
+RUN rm geoserver-2.25.2-bin.zip
+RUN echo "export GEOSERVER_HOME=/usr/share/geoserver" >> ~/.profile
+RUN . ~/.profile
+RUN chmod +x /usr/share/geoserver/bin/startup.sh
+RUN rm /usr/share/geoserver/webapps/geoserver/WEB-INF/lib/marlin-0.9.3.jar
+
+
+CMD ["/usr/share/geoserver/bin/startup.sh"]
