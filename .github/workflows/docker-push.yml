@@ -21,7 +21,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: pcadler/geoserver-build:${{ github.ref_name }}
+          tags: pcadler/geoserver-deploy:${{ github.ref_name }}
       - name: Build and Push Express Image
         uses: docker/build-push-action@v2
         with:
