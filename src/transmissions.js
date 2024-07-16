@@ -5,6 +5,7 @@ import {
   hoverTransmissionLineStyle,
   highlightTransmissionLineStyle,
   clusterPowerPlantStyle,
+  styleTransmissionLines,
   clusterStyleFunction,
   RectangleStyle,
 } from './ol_styles';
@@ -35,13 +36,14 @@ if (map == null) {
   console.log('Map Failed To Load');
 }
 
+//tranmissionLineLayer.setStyle(defaultTransmissionLineStyle);
+tranmissionLineLayer.setStyle(styleTransmissionLines);
+
 map.addLayer(tranmissionLineLayer);
 startLoadingCycleOnLayer(tranmissionLineLayer);
 //DrawRectangle(map.getView().calculateExtent(map.getSize()));
 
 AddListener(tranmissionLineLayer);
-
-tranmissionLineLayer.setStyle(defaultTransmissionLineStyle);
 
 let selectedFeature = null;
 let vectorTransmissionLayerOut = tranmissionLineLayer;
@@ -87,7 +89,7 @@ const handleSelectionPopup = function (event) {
       if (layer === vectorTransmissionLayerOut) {
         // Construct content for the popup based on the feature's properties
         var properties = feature.getProperties();
-        console.log(properties);
+
         var info = `Name: ${properties.OWNER}<br>
                   Length: ${Math.round(properties.SHAPE__Len / 1000)} km <br> 
                   Voltage: ${properties.VOLTAGE}<br>
@@ -171,8 +173,6 @@ function handleZoomChanges() {
     combinedFilter
   )}`;
 
-  console.log('wfsUrl' + ' ' + wfsUrl);
-
   //store the current selectedFeature
   var selectedFeatureID = selectedFeature ? selectedFeature.getId() : null;
 
@@ -192,7 +192,8 @@ function handleZoomChanges() {
   });
 
   //set style
-  vectorTransmissionLayer.setStyle(defaultTransmissionLineStyle);
+  //tranmissionLineLayer.setStyle(defaultTransmissionLineStyle);
+  vectorTransmissionLayer.setStyle(styleTransmissionLines);
 
   vectorTransmissionLayerOut = vectorTransmissionLayer;
 
@@ -223,7 +224,8 @@ function handleZoomChanges() {
   }
 
   //apply layer style
-  tranmissionLineLayer.setStyle(defaultTransmissionLineStyle);
+  //tranmissionLineLayer.setStyle(defaultTransmissionLineStyle);
+  vectorTransmissionLayer.setStyle(styleTransmissionLines);
 
   //apply the styling to the selected feature
   if (selectedFeature) {
@@ -304,7 +306,8 @@ function updateMapLayers(voltage, distance) {
   vectorTransmissionLayerOut = vectorTransmissionLayer;
 
   // Add styling to layer
-  vectorTransmissionLayer.setStyle(defaultTransmissionLineStyle);
+  //tranmissionLineLayer.setStyle(defaultTransmissionLineStyle);
+  vectorTransmissionLayer.setStyle(styleTransmissionLines);
 
   DrawRectangle(extent);
   map.addLayer(vectorTransmissionLayer);
@@ -331,13 +334,13 @@ function hoverTranssmionHandler(evt) {
     return feature;
   });
 
-  // Reset style of previously hovered feature and not the same as highlighted feature
+  if (typeof currentHoveredFeature === 'undefined' || !currentHoveredFeature)
+    return;
+
   if (
-    currentHoveredFeature &&
-    feature !== currentHoveredFeature &&
+    currentHoveredFeature !== feature &&
     currentHoveredFeature !== selectedFeature
   ) {
-    // Assuming you have a defaultStyle or you can simply set to null to use the layer's default
     currentHoveredFeature.setStyle(null);
     currentHoveredFeature = null;
   }
@@ -376,7 +379,6 @@ function AddListener(newTransmissionLayer) {
       var geojsonStr = geojsonFormat.writeFeatures(features);
       var sizeInBytes = new TextEncoder().encode(geojsonStr).length;
       var sizeInKb = sizeInBytes / 1024;
-      //console.log(`Total data size: ${sizeInKb.toFixed(2)} kB`);
 
       //Total Data Size Loaded : 0kb
       if (sizeInKb > 1024) {
@@ -403,15 +405,13 @@ function AddListener(newTransmissionLayer) {
 
       var totalNumberLines = features.length;
       number_html.innerHTML = `# of Transmission Lines: ${totalNumberLines}`;
-      //console.log(`Total number of vertices: ${totalVertices}`);
-      //
 
       //get total length of the transmission lines from properties.SHAPE__Len
       var totalLength = features.reduce((acc, feature) => {
         var properties = feature.getProperties();
         return acc + properties.SHAPE__Len / 1000;
       }, 0);
-      //console.log(`Total length of transmission lines: ${totalLength}`);
+
       //<h4 id="distance-transmission-line" Total Length: 0 km</h4>
       distance_html.innerHTML = `Total Lengther: ${Math.round(totalLength)} km`;
 

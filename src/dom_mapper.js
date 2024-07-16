@@ -35,15 +35,6 @@ for (let z = 0; z < 14; ++z) {
   matrixIds[z] = `EPSG:900913:${z}`;
 }
 
-console.log('Resolutions');
-console.log(resolutions);
-
-console.log('M atrix Ids');
-console.log(matrixIds);
-
-console.log('Top Left');
-console.log(getTopLeft(projectionExtent));
-
 const wmtsLayer = new TileLayer({
   source: new WMTS({
     url: 'http://localhost:3000/api/geoserver/gwc/service/wmts',

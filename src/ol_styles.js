@@ -93,6 +93,55 @@ function clusterStyleFunction(feature) {
   return style;
 }
 
+function styleTransmissionLines(feature, resolution) {
+  /*
+  define boundaries?
+  > 66k -> 132k Light Blue
+  > 132k -> 220k Dark Blue
+  > 220k -> 400k Light Purple
+  > 400k -> 765k Dark Purple
+  > 765k -> 1200k Brown
+  */
+
+  var color = '#000000';
+  var width = 2;
+
+  var properties = feature.getProperties();
+  let VOLTAGE = properties.VOLTAGE;
+
+  //panic if voltage is undefined
+  if (VOLTAGE === undefined) {
+    console.error('Voltage is undefined');
+    return;
+  }
+
+  if (VOLTAGE > 66 && VOLTAGE <= 132) {
+    color = '#00ffff';
+  }
+  if (VOLTAGE > 132 && VOLTAGE <= 220) {
+    color = '#0000ff';
+  }
+
+  if (VOLTAGE > 220 && VOLTAGE <= 400) {
+    color = '#ff00ff';
+  }
+
+  if (VOLTAGE > 400 && VOLTAGE <= 765) {
+    color = '#800080';
+  }
+
+  if (VOLTAGE > 765 && VOLTAGE <= 1200) {
+    color = '#a52a2a';
+  }
+
+  return new Style({
+    stroke: new Stroke({
+      color: color,
+      width: 4,
+    }),
+  });
+}
+
 export {
   defaultTransmissionLineStyle,
   hoverTransmissionLineStyle,
@@ -100,4 +149,5 @@ export {
   clusterPowerPlantStyle,
   clusterStyleFunction,
   RectangleStyle,
+  styleTransmissionLines,
 };

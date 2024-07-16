@@ -298,13 +298,8 @@ map.on('moveend', function () {
   // Adjust clusterSource distance or clusterLayer style based on zoom
   // For example, disable clustering at high zoom levels
   var certainZoomLevel = 10;
-  if (zoom > certainZoomLevel) {
-    powerPlantClusterLayer.setDistance(0); // No clustering
-  } else {
-    powerPlantClusterLayer.setDistance(40); // Adjust distance as needed
-  }
 });
 
-if (!featureFound) {
-  infoPanel.innerHTML = 'Click on a point';
+if (typeof featureFound === 'undefined' || !featureFound) {
+  //infoPanel.innerHTML = 'Click on a point';
 }
