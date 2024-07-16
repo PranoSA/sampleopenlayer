@@ -36,6 +36,7 @@ if (map == null) {
 }
 
 map.addLayer(tranmissionLineLayer);
+startLoadingCycleOnLayer(tranmissionLineLayer);
 //DrawRectangle(map.getView().calculateExtent(map.getSize()));
 
 AddListener(tranmissionLineLayer);
@@ -51,6 +52,21 @@ let last_distance = 0;
 var container = document.getElementById('popup');
 var content = document.getElementById('popup-content');
 var closer = document.getElementById('popup-closer');
+
+function startLoadingCycleOnLayer(transmissionLineLayerLoading) {
+  var loadingFeatures = 0;
+  transmissionLineLayerLoading.getSource().on('featuresloadstart', function () {
+    loadingFeatures++;
+    document.getElementById('loadingIndicator').style.display = 'block';
+  });
+
+  transmissionLineLayerLoading.getSource().on('featuresloadend', function () {
+    loadingFeatures--;
+    if (loadingFeatures === 0) {
+      document.getElementById('loadingIndicator').style.display = 'none';
+    }
+  });
+}
 
 // Close the popup when the close button is clicked
 closer.onclick = function () {
@@ -191,6 +207,8 @@ function handleZoomChanges() {
   DrawRectangle(extent);
   map.addLayer(vectorTransmissionLayer);
   AddListener(vectorTransmissionLayer);
+  // add the loading cycle
+  startLoadingCycleOnLayer(vectorTransmissionLayer);
 
   //restore selected feature vector
 
@@ -237,6 +255,7 @@ function DrawRectangle(extent) {
 
   // Step 4: Add the Layer to the Map
   map.addLayer(vectorLayer);
+  startLoadingCycleOnLayer(vectorLayer);
   return;
 }
 
@@ -289,6 +308,7 @@ function updateMapLayers(voltage, distance) {
 
   DrawRectangle(extent);
   map.addLayer(vectorTransmissionLayer);
+  startLoadingCycleOnLayer(vectorTransmissionLayer);
 
   AddListener(vectorTransmissionLayer);
 

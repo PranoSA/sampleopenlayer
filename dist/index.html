@@ -14,6 +14,7 @@
   <script defer src="main.js"></script><link href="main.css" rel="stylesheet"></head>
   <body>
     <div id="container" class="container">
+      
       <div id="popup" class="ol-popup">
         <a href="#" id="popup-closer" class="ol-popup-closer"></a>
         <div id="popup-content"></div>
@@ -24,6 +25,7 @@
         <div id="map" class="map"></div>
 
       <div id="map-controls">
+        <div id="loadingIndicator" style="display: none; flex-basis: 100%;"> <h3> Loading... </h3></div>
         <label for="min-voltage">Min Voltage (kV):</label>
         <input
           type="range"
@@ -49,6 +51,7 @@
         <button id="update-map-btn">Update Map</button>
 
         <div id="tranmission-line-info">
+          
           <h4 id="number-transmission-line"># of Transmission Lines: 0</h4>
           <h4 id="vertex-transmission-line"># of Vertices: 0</h4>
           <h4 id="distance-transmission-line" Total Length: 0 km</h4>
