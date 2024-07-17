@@ -37,11 +37,12 @@ http://localhost:3000
 
 # Linux Setup
 
-Have Java 11 or 17 installed
+### Have Java 11 or 17 installed
 
-Have npm installed, and run
-npm install
+### Have npm installed, and run
+### npm install
 
+### Geoserver
 Install Geoserver ( The Platform Independent Binary, that uses Java) at default location /usr/share/geoserver, leave default data_dir as is (/usr/share/geoserver/data_dir).
 
 Change Directory into geoserver_configs,
@@ -49,7 +50,7 @@ Change Directory into geoserver_configs,
 ### cd geoserver_config
 
 and run
-./download_data.sh
+### ./download_data.sh
 
 to download the necessary shapefiles ( The US States Map, Transmission Lines Map, and Power Plants Map)
 
