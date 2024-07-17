@@ -63,6 +63,9 @@ This will build the datastores and the layers on top of them that the client wil
 Change Directory back to project root
 cd ..
 
+In one terminal, run 
+### /usr/bin/geoserver/bin/startup.sh
+
 If you want to build the static assets, run
 
 ### npx webpack --config webpack.config.js
